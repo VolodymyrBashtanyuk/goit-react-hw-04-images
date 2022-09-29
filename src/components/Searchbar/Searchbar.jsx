@@ -1,59 +1,40 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import { ImSearch } from 'react-icons/im';
 import { Header, Form, Button, Input } from './searchBarStyle';
 
-export class Searchbar extends Component {
-  state = {
-    searchName: '',
-  };
+export const Searchbar = ({ onSubmit }) => {
+  const [searchName, setSearchName] = useState('');
 
-  handleChange = evt => {
+  const handleChange = evt => {
     const { value } = evt.currentTarget;
-    this.setState({
-      searchName: value.trim(),
-    });
+    setSearchName(value.trim());
   };
 
-  handleSubmit = evt => {
-    const { searchName } = this.state;
-    const { onSubmit } = this.props;
-    const { reset } = this;
-
+  const handleSubmit = evt => {
     evt.preventDefault();
     onSubmit(searchName.toLowerCase());
-    reset();
+    setSearchName('');
   };
 
-  reset = () => {
-    this.setState({
-      searchName: '',
-    });
-  };
+  return (
+    <Header>
+      <Form onSubmit={handleSubmit}>
+        <Button type="submit">
+          <ImSearch className="icon-serch" />
+          Search
+        </Button>
 
-  render() {
-    const { handleSubmit, handleChange } = this;
-    const { searchName } = this.state;
-
-    return (
-      <Header>
-        <Form onSubmit={handleSubmit}>
-          <Button type="submit">
-            <ImSearch className="icon-serch" />
-            Search
-          </Button>
-
-          <label>
-            <Input
-              type="text"
-              autoComplete="off"
-              onChange={handleChange}
-              value={searchName}
-              autoFocus
-              placeholder="Search images and photos"
-            />
-          </label>
-        </Form>
-      </Header>
-    );
-  }
-}
+        <label>
+          <Input
+            type="text"
+            autoComplete="off"
+            onChange={handleChange}
+            value={searchName}
+            autoFocus
+            placeholder="Search images and photos"
+          />
+        </label>
+      </Form>
+    </Header>
+  );
+};

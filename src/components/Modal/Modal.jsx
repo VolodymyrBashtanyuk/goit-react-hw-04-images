@@ -11,6 +11,9 @@ export const Modal = ({ idImage, data, onClose }) => {
   useEffect(() => {
     document.addEventListener('keydown', closeModal);
     serchImage();
+    return () => {
+      document.removeEventListener('keydown', closeModal);
+    };
   });
 
   const serchImage = () => {
@@ -23,7 +26,6 @@ export const Modal = ({ idImage, data, onClose }) => {
   const closeModal = ({ currentTarget, target, code }) => {
     if (currentTarget === target || code === 'Escape') {
       onClose();
-      document.removeEventListener('keydown', closeModal);
     }
   };
 

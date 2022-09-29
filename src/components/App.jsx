@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
 import { NoteTitle, Container } from 'components/AppStyled';
 
@@ -8,143 +8,96 @@ import { Button } from 'components/Button/Button';
 import { Loader, LoaderMoreButton } from 'components/Loader/Loader';
 import { Modal } from 'components/Modal/Modal';
 
-export class App extends Component {
-  state = {
-    imageName: '',
-    imageData: [],
-    load: false,
-    loadButton: false,
-    page: 1,
-    notification: false,
-    modalOpen: false,
-    id: 0,
-  };
+export const App = () => {
+  const [imageName, setImageName] = useState('');
+  const [imageData, setImageData] = useState([]);
+  const [page, setPage] = useState('1');
+  const [id, setId] = useState('0');
+  const [load, setLoad] = useState(false);
+  const [loadButton, setLoadButton] = useState(false);
+  const [notification, setNotification] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [error, setError] = useState('');
 
-  componentDidUpdate(_, prevState) {
-    const { imageName, page } = this.state;
-    const { fetchApi } = this;
-
-    if (page !== prevState.page) {
-      this.setState({
-        loadButton: true,
-        notification: false,
-      });
-      fetchApi(imageName, page);
+  useEffect(() => {
+    if (imageName === '') {
+      return;
     }
-  }
+    fetchApi();
+  }, [imageName, page]);
 
-  imageFormSubmit = imageSearchName => {
-    const { page } = this.state;
-    const { fetchApi } = this;
-    const { resetSearch } = this;
-
-    this.setState({
-      imageName: imageSearchName,
-    });
-    resetSearch();
-    fetchApi(imageSearchName, page);
-  };
-
-  fetchApi = async (name, page) => {
-    this.setState({
-      load: true,
-    });
+  const fetchApi = async () => {
+    setLoad(true);
+    setLoadButton(true);
+    setNotification(false);
     try {
-      const api = await ImagesApi(name, page);
-      this.notification(api);
-
-      this.setState(prevState => {
-        return {
-          imageData: [...prevState.imageData, ...api.hits],
-        };
-      });
-    } catch (error) {
-      this.setState({
-        error,
-      });
+      const api = await ImagesApi(imageName, page);
+      notifications(api);
+      setImageData([...imageData, ...api.hits]);
+    } catch (errors) {
+      setError(errors);
+      console.log(error);
     } finally {
-      this.setState({
-        load: false,
-        loadButton: false,
-      });
+      setLoad(false);
+      setLoadButton(false);
     }
   };
 
-  loadMoreButton = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const imageFormSubmit = imageSearchName => {
+    setImageName(imageSearchName);
+    setImageData([]);
+    setPage(1);
+    setNotification(false);
   };
 
-  resetSearch = () => {
-    this.setState({
-      imageData: [],
-      page: 1,
-      notification: false,
-    });
+  const loadMoreButton = () => {
+    setPage(prev => prev + 1);
   };
 
-  notification = data => {
-    console.log(data.totalHits);
-    // const { imageData } = this.state;
+  const notifications = data => {
     if (data.totalHits === 0) {
-      this.setState({
-        notification: true,
-      });
+      setNotification(true);
       return;
     }
   };
 
-  openModal = ({ currentTarget, target }) => {
+  const openModal = ({ currentTarget, target }) => {
     if (currentTarget === target) {
-      this.setState({ modalOpen: true, id: currentTarget.id });
+      setModalOpen(true);
+      setId(currentTarget.id);
     }
   };
 
-  closeModal = () => {
-    this.setState({ modalOpen: false });
-  };
+  return (
+    <>
+      <Searchbar onSubmit={imageFormSubmit} />
+      {modalOpen && (
+        <Modal
+          data={imageData}
+          onClose={() => setModalOpen(false)}
+          idImage={id}
+        />
+      )}
+      {load && <Loader onLoad={load} />}
 
-  render() {
-    const {
-      imageName,
-      modalOpen,
-      imageData,
-      id,
-      loadButton,
-      load,
-      notification,
-    } = this.state;
-
-    const { imageFormSubmit, closeModal, openModal, loadMoreButton } = this;
-
-    return (
-      <>
-        <Searchbar onSubmit={imageFormSubmit} />
-        {modalOpen && (
-          <Modal data={imageData} onClose={closeModal} idImage={id} />
-        )}
-        {load && <Loader onLoad={load} />}
-
-        {imageData.length !== 0 && (
-          <>
-            <ImageGallery items={imageData} onOpen={openModal} />
-            {loadButton ? (
-              <LoaderMoreButton load={loadButton} />
-            ) : (
-              <Button onClick={loadMoreButton} />
-            )}
-          </>
-        )}
-        {notification && (
-          <NoteTitle>
-            Sorry :( no image with name <Container>{imageName}</Container>
-          </NoteTitle>
-        )}
-      </>
-    );
-  }
-}
+      {imageData.length !== 0 && (
+        <>
+          <ImageGallery items={imageData} onOpen={openModal} />
+          {loadButton ? (
+            <LoaderMoreButton load={loadButton} />
+          ) : (
+            <Button onClick={loadMoreButton} />
+          )}
+        </>
+      )}
+      {notification && (
+        <NoteTitle>
+          Sorry :( no image with name <Container>{imageName}</Container>
+        </NoteTitle>
+      )}
+    </>
+  );
+};
 
 // import { ImagesApi } from 'services/ImagesApi';
 // import { ImageGallery } from 'components/ImageGallery/ImageGallery';
