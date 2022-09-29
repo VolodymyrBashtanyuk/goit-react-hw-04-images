@@ -1,56 +1,38 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Overlay, ModalOverlay, Img } from './ModalStyle';
 
 const modalRoot = document.getElementById('modal-root');
 
-export class Modal extends Component {
-  state = {
-    modalImage: {},
-  };
+export const Modal = ({ idImage, data, onClose }) => {
+  const [modalImage, setModalImage] = useState({});
+  const { largeImageURL, tags } = modalImage;
 
-  componentDidMount() {
-    document.addEventListener('keydown', this.closeModal);
-    this.serchImage();
-  }
+  useEffect(() => {
+    document.addEventListener('keydown', closeModal);
+    serchImage();
+  });
 
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.closeModal);
-  }
-
-  componentDidUpdate(_, prevProps) {
-    const { idImage } = this.props;
-    if (prevProps.idImage !== idImage) {
-    }
-  }
-
-  serchImage = () => {
-    const { data, idImage } = this.props;
-
+  const serchImage = () => {
     const search = data.find(({ id }) => {
       return id === Number(idImage);
     });
-    return this.setState({
-      modalImage: search,
-    });
+    setModalImage(search);
   };
 
-  closeModal = ({ currentTarget, target, code }) => {
+  const closeModal = ({ currentTarget, target, code }) => {
     if (currentTarget === target || code === 'Escape') {
-      this.props.onClose();
+      onClose();
+      document.removeEventListener('keydown', closeModal);
     }
   };
 
-  render() {
-    const { largeImageURL, tags } = this.state.modalImage;
-
-    return createPortal(
-      <Overlay onClick={this.closeModal}>
-        <ModalOverlay>
-          <Img src={largeImageURL} alt={tags} />
-        </ModalOverlay>
-      </Overlay>,
-      modalRoot
-    );
-  }
-}
+  return createPortal(
+    <Overlay onClick={closeModal}>
+      <ModalOverlay>
+        <Img src={largeImageURL} alt={tags} />
+      </ModalOverlay>
+    </Overlay>,
+    modalRoot
+  );
+};
