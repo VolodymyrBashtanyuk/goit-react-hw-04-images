@@ -23,7 +23,9 @@ export const App = () => {
     if (imageName === '') {
       return;
     }
+
     fetchApi();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageName, page]);
 
   const fetchApi = async () => {
